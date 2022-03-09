@@ -8,6 +8,10 @@ app.get('/', (req, res) => {
 app.get('/wait', (req, res) => {
     res.sendFile('wait.html', { root: __dirname});
 })
+app.get('/set_avail/:num', function(req, res) {
+    waitCount = req.params.num;
+    res.send( { success: true } );
+})
 let waitCount = 10;
 app.get('/avail', (req, res) => {
     console.log('avail');
