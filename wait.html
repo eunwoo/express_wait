@@ -30,25 +30,43 @@
         </video>
     </div>
     <script>
-        const div = document.getElementById('message');
-        let waitCheck = () => {
-            console.log('waitCheck')
-            axios.get('/avail')
-                .then(function (response) {
-                    console.log(response);
-                    if(response.data.avail === true) {
-                        console.log('reloading');
-                        clearInterval(waitInterval);
-                        window.location.assign('/')
-                    }
-                    else {
-                        div.textContent = response.data.waitCount + " is waiting...";
-                    }
-                })
+        // 웹소켓 전역 객체 생성
+        var ws = new WebSocket("ws://localhost:3000");
+
+        // 연결이 수립되면 서버에 메시지를 전송한다
+        ws.onopen = function(event) {
+            ws.send("Client message: Hi!");
         }
-        let waitInterval = setInterval(() => {
-            waitCheck();
-        }, 1000);
+
+        // 서버로 부터 메시지를 수신한다
+        ws.onmessage = function(event) {
+            console.log("Server message: ", event.data);
+        }
+
+        // error event handler
+        ws.onerror = function(event) {
+            console.log("Server error message: ", event.data);
+        }
+                
+        // const div = document.getElementById('message');
+        // let waitCheck = () => {
+        //     console.log('waitCheck')
+        //     axios.get('/avail')
+        //         .then(function (response) {
+        //             console.log(response);
+        //             if(response.data.avail === true) {
+        //                 console.log('reloading');
+        //                 clearInterval(waitInterval);
+        //                 window.location.assign('/')
+        //             }
+        //             else {
+        //                 div.textContent = response.data.waitCount + " is waiting...";
+        //             }
+        //         })
+        // }
+        // let waitInterval = setInterval(() => {
+        //     waitCheck();
+        // }, 1000);
     </script>
 </body>
 </html>
