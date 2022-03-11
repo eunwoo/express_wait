@@ -34,11 +34,11 @@ io.on('connection', (socket) => {
         console.log('userWaiting = ' + userWaiting);
         if(slotNum > 0 && socket.id === userWaiting[0]) {
             // welcomeList.add(userWaiting[0]);
-            slotNum--;
-            userWaiting.shift();
+            // slotNum--;
+            // userWaiting.shift();
             console.log('userWaiting = ' + userWaiting);
             console.log('emit welcome')
-            socket.emit('welcome')
+            socket.emit('welcome', socket.id);
         }
         else {
             console.log('emit check')
@@ -48,11 +48,19 @@ io.on('connection', (socket) => {
 });
 
 let slotNum = 0;
-app.get('/', (req, res) => {
+app.get('/:id', (req, res) => {
     if(slotNum > 0) {
         if(userWaiting.length === 0) {
             slotNum--;
             res.send("hello world")
+        }
+        else if(req.params.data === userWaiting[0]) {
+            slotNum--;
+            userWaiting.shift();
+            res.send("hello world")
+        }
+        else {  // someone is waiting before you
+            // this case is handled by socket.io
         }
     }
     else {
