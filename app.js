@@ -6,33 +6,58 @@ const { v4: uuidv4 } = require('uuid');
 const { serialize, parse } = require('cookie');
 const cookieParser = require('cookie-parser');
 const { redirect } = require('express/lib/response');
+const io = require('socket.io')(server);
 /*
 쿠키제어
 https://kwanghyuk.tistory.com/90
+socket.io cookie
+https://socket.io/how-to/deal-with-cookies
+
 */
 app.use(cookieParser());
+const welcomeList = [];
+io.on('connection', (socket) => {
+    console.log(socket.id) + ' is connected';
+    userWaiting.push(socket.id);
+    socket.on('disconnect', () => {
+        let index;
+        if((index = userWaiting.findIndex(element => element === socket.id)) !== -1) {
+            userWaiting.splice(index, 1);
+            console.log(socket.id + 'is removed');
+        }
+        console.log('disconnected')
+        console.log(userWaiting);
+    })
+    socket.on('check', () => {
+        console.log('check')
+        console.log('socket.id = ' + socket.id);
+        console.log('userWaiting = ' + userWaiting);
+        if(slotNum > 0 && socket.id === userWaiting[0]) {
+            // welcomeList.add(userWaiting[0]);
+            slotNum--;
+            userWaiting.shift();
+            console.log('userWaiting = ' + userWaiting);
+            console.log('emit welcome')
+            socket.emit('welcome')
+        }
+        else {
+            console.log('emit check')
+            socket.emit('check', userWaiting.findIndex(element => element === socket.id));
+        }
+    })
+});
 
-let slotNum = 3;
+let slotNum = 0;
 app.get('/', (req, res) => {
     if(slotNum > 0) {
         if(userWaiting.length === 0) {
             slotNum--;
             res.send("hello world")
         }
-        else if(req.cookies.uid === userWaiting[0]){
-            userWaiting.shift();
-            slotNum--;
-            res.send("hello world")
-        }
-        else {
-            // someone is waiting ahead.
-        }
     }
     else {
-        res.cookie("uid", getUUID())
         res.sendFile(__dirname + '/index.html');
     }
-    
 });
 app.get('/setSlot/:data', (req, res) => {
     console.log('setSlot/:data');
@@ -52,7 +77,7 @@ app.get('/check', (req, res) => {
         res.send({waitNum: userWaiting.length - 1, success: true});
     }
     else {
-        res.send({waitNum: userWaiting.length - 1, success: false});
+        res.send({waitNum: userWaiting.findIndex(element => element === req.cookies.uid), success: false});
     }
 })
 const userWaiting = [];
@@ -62,6 +87,10 @@ function getUUID() {
     return uid;
 }
 
-app.listen(3000, () => {
-    console.log('express server is up and running')
+// app.listen(3000, () => {
+//     console.log('express server is up and running')
+// })
+
+server.listen(3000, () => {
+    console.log('http server is listening at 3000');
 })
