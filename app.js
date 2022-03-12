@@ -23,7 +23,7 @@ io.on('connection', (socket) => {
         let index;
         if((index = userWaiting.findIndex(element => element === socket.id)) !== -1) {
             userWaiting.splice(index, 1);
-            console.log(socket.id + 'is removed');
+            console.log(socket.id + ' is removed');
         }
         console.log('disconnected')
         console.log(userWaiting);
@@ -38,6 +38,7 @@ io.on('connection', (socket) => {
             // userWaiting.shift();
             console.log('userWaiting = ' + userWaiting);
             console.log('emit welcome')
+            welcomeList.push(socket.id);
             socket.emit('welcome', socket.id);
         }
         else {
@@ -49,17 +50,22 @@ io.on('connection', (socket) => {
 
 let slotNum = 0;
 app.get('/:id', (req, res) => {
+    console.log('/id ' + req.params.id)
+    if(req.params.id === welcomeList[0]) {
+        slotNum--;
+        welcomeList.shift();
+        console.log('send welcome')
+        // res.redirect('/');
+        res.send('welcome')
+    }
+})
+app.get('/', (req, res) => {
     if(slotNum > 0) {
         if(userWaiting.length === 0) {
             slotNum--;
             res.send("hello world")
         }
-        else if(req.params.data === userWaiting[0]) {
-            slotNum--;
-            userWaiting.shift();
-            res.send("hello world")
-        }
-        else {  // someone is waiting before you
+        else {  // someone is already waiting before you
             // this case is handled by socket.io
         }
     }
